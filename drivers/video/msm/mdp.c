@@ -63,7 +63,7 @@ static struct res_mmu_clk mdp_sec_mmu_clks[] = {
 
 int mdp_rev;
 int mdp_iommu_split_domain;
-u32 mdp_max_clk = 266670000;
+u32 mdp_max_clk = 266667000;
 
 u32 mdp_max_clk = 266667000;   /* Max MDP Clk */
 u64 mdp_max_bw = 0xFFFFFFFFUL; /* Max BW Possible */
