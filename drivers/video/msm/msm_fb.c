@@ -908,15 +908,6 @@ static struct platform_driver msm_fb_driver = {
 		   },
 };
 
-#if defined(CONFIG_HAS_EARLYSUSPEND) && defined(CONFIG_FB_MSM_MDP303)
-static void memset32_io(u32 __iomem *_ptr, u32 val, size_t count)
-{
-	count >>= 2;
-	while (count--)
-		writel(val, _ptr++);
-}
-#endif
-
 #ifdef CONFIG_HAS_EARLYSUSPEND
 static void msmfb_early_suspend(struct early_suspend *h)
 {
