@@ -2012,9 +2012,7 @@ static int msm_open(struct file *f)
 	return rc;
 
 msm_send_open_server_failed:
-	v4l2_fh_del(&pcam_inst->eventHandle);
-	v4l2_fh_exit(&pcam_inst->eventHandle);
-mctl_event_q_setup_failed:
+	msm_destroy_v4l2_event_queue(&pcam_inst->eventHandle);
 	if (pmctl->mctl_release) {
 		if (pmctl->mctl_release(pmctl) < 0)
 			pr_err("%s: mctl_release failed\n", __func__);
