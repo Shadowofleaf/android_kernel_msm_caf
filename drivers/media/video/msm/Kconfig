@@ -317,3 +317,9 @@ config OV7695_RAW
 	default n
 	---help---
 	  Omni Vision BAYER Sensor for QRD Devices
+
+config SENSOR_POWER_CHECK_PATCH
+	bool "sensor power up and down patch"
+	depends on MSM_CAMERA
+	---help---
+	  caf patch for state check for sensor power up and down
