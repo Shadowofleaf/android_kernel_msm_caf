@@ -782,7 +782,7 @@ static void fix_sizes(void)
         if (get_ddr_size() > SZ_256M)
                 pmem_adsp_size = CAMERA_ZSL_SIZE;
 	msm_ion_camera_size = pmem_adsp_size;
-	msm_ion_audio_size = (MSM_PMEM_AUDIO_SIZE + PMEM_KERNEL_EBI1_SIZE);
+	msm_ion_audio_size = MSM_PMEM_AUDIO_SIZE;
 	msm_ion_sf_size = pmem_mdp_size;
 #ifdef CONFIG_CMA
 	msm_ion_camera_size_carving = 0;
@@ -945,8 +945,9 @@ static void __init size_ion_devices(void)
 static void __init reserve_ion_memory(void)
 {
 #if defined(CONFIG_ION_MSM) && defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_camera_size;
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_audio_size;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += PMEM_KERNEL_EBI1_SIZE;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size +=
+		msm_ion_camera_size_carving;
 	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
 #endif
 }
@@ -974,6 +975,8 @@ static struct reserve_info msm7x27a_reserve_info __initdata = {
 static void __init msm7x27a_reserve(void)
 {
 	reserve_info = &msm7x27a_reserve_info;
+	memblock_remove(MSM8625_NON_CACHE_MEM, SZ_2K);
+	memblock_remove(BOOTLOADER_BASE_ADDR, msm_ion_audio_size);
 	msm_reserve();
 #ifdef CONFIG_CMA
 	dma_declare_contiguous(
