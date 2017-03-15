@@ -427,6 +427,7 @@ ssize_t mdp4_dsi_video_show_event(struct device *dev,
 	u64 vsync_tick;
 	ktime_t timestamp;
 	unsigned long flags;
+	u64 vsync_tick;
 
 	cndx = 0;
 	vctrl = &vsync_ctrl_db[0];
@@ -447,8 +448,15 @@ ssize_t mdp4_dsi_video_show_event(struct device *dev,
 	spin_lock_irqsave(&vctrl->spin_lock, flags);
 	vsync_tick = ktime_to_ns(vctrl->vsync_time);
 	spin_unlock_irqrestore(&vctrl->spin_lock, flags);
+	ret = wait_for_completion_interruptible(&vctrl->vsync_comp);
+	if (ret)
+		return ret;
 
-	ret = scnprintf(buf, PAGE_SIZE, "VSYNC=%llu", vsync_tick);
+	spin_lock_irqsave(&vctrl->spin_lock, flags);
+	vsync_tick = ktime_to_ns(vctrl->vsync_time);
+	spin_unlock_irqrestore(&vctrl->spin_lock, flags);
+
+	ret = snprintf(buf, PAGE_SIZE, "VSYNC=%llu", vsync_tick);
 	buf[strlen(buf) + 1] = '\0';
 	return ret;
 }
@@ -1003,8 +1011,11 @@ void mdp4_primary_vsync_dsi_video(void)
 
 	spin_lock(&vctrl->spin_lock);
 	vctrl->vsync_time = ktime_get();
-	wake_up_all(&vctrl->wait_queue_internal);
-	wake_up_interruptible_all(&vctrl->wait_queue);
+
+	if (vctrl->wait_vsync_cnt) {
+		complete_all(&vctrl->vsync_comp);
+		vctrl->wait_vsync_cnt = 0;
+	}
 	spin_unlock(&vctrl->spin_lock);
 }
 
