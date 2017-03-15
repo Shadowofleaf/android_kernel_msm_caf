@@ -99,10 +99,13 @@ struct ion_cp_heap {
 	int iommu_2x_map_domain;
 	unsigned int has_outer_cache;
 	atomic_t protect_cnt;
+<<<<<<< HEAD
 	void *cpu_addr;
 	size_t heap_size;
 	dma_addr_t handle;
 	int cma;
+=======
+>>>>>>> abb6419... Sync with TeamHackLG
 	int disallow_non_secure_allocation;
 };
 
@@ -207,12 +210,15 @@ static int ion_on_first_alloc(struct ion_heap *heap)
 		if (ret_value)
 			return 1;
 	}
+<<<<<<< HEAD
 
 	if (cp_heap->cma) {
 		ret_value = allocate_heap_memory(heap);
 		if (ret_value)
 			return 1;
 	}
+=======
+>>>>>>> abb6419... Sync with TeamHackLG
 	return 0;
 }
 
@@ -225,9 +231,12 @@ static void ion_on_last_free(struct ion_heap *heap)
 		if (fmem_set_state(FMEM_T_STATE) != 0)
 			pr_err("%s: unable to transition heap to T-state\n",
 				__func__);
+<<<<<<< HEAD
 
 	if (cp_heap->cma)
 		free_heap_memory(heap);
+=======
+>>>>>>> abb6419... Sync with TeamHackLG
 }
 
 /**
@@ -575,6 +584,7 @@ void *ion_cp_heap_map_kernel(struct ion_heap *heap, struct ion_buffer *buffer)
 		if (cp_heap->reusable) {
 			ret_value = ion_map_fmem_buffer(buffer, cp_heap->base,
 				cp_heap->reserved_vrange, buffer->flags);
+<<<<<<< HEAD
 		} else if (cp_heap->cma) {
 			int npages = PAGE_ALIGN(buffer->size) / PAGE_SIZE;
 			struct page **pages = vmalloc(
@@ -598,6 +608,8 @@ void *ion_cp_heap_map_kernel(struct ion_heap *heap, struct ion_buffer *buffer)
 			}
 			ret_value = vmap(pages, npages, VM_IOREMAP, pgprot);
 			vfree(pages);
+=======
+>>>>>>> abb6419... Sync with TeamHackLG
 		} else {
 			if (ION_IS_CACHED(buffer->flags))
 				ret_value = ioremap_cached(buffer->priv_phys,
@@ -1134,7 +1146,10 @@ struct ion_heap *ion_cp_heap_create(struct ion_platform_heap *heap_data)
 				extra_data->iommu_map_all;
 		cp_heap->iommu_2x_map_domain =
 				extra_data->iommu_2x_map_domain;
+<<<<<<< HEAD
 		cp_heap->cma = extra_data->is_cma;
+=======
+>>>>>>> abb6419... Sync with TeamHackLG
 		cp_heap->disallow_non_secure_allocation =
 			extra_data->no_nonsecure_alloc;
 

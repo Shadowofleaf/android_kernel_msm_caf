@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 /* Copyright (c) 2011, The Linux Foundation. All rights reserved.
+=======
+/* Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
+>>>>>>> abb6419... Sync with TeamHackLG
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -1230,7 +1234,11 @@ static int audio_mvs_thread(void *data)
 		kfree(rpc_hdr);
 		rpc_hdr = NULL;
 	}
+<<<<<<< HEAD
 
+=======
+	complete_and_exit(&audio->complete, 0);
+>>>>>>> abb6419... Sync with TeamHackLG
 	MM_DBG("MVS thread stopped\n");
 
 	return 0;
@@ -1493,7 +1501,7 @@ static long audio_mvs_ioctl(struct file *file,
 	switch (cmd) {
 	case AUDIO_GET_MVS_CONFIG: {
 		struct msm_audio_mvs_config config;
-
+		memset(&config, 0, sizeof(config));
 		MM_DBG("GET_MVS_CONFIG mvs_mode %d rate_type %d\n",
 			config.mvs_mode, config.rate_type);
 
@@ -1593,6 +1601,7 @@ static int audio_mvs_open(struct inode *inode, struct file *file)
 
 	MM_DBG("\n");
 
+<<<<<<< HEAD
 	memset(&audio_mvs_info, 0, sizeof(audio_mvs_info));
 	mutex_init(&audio_mvs_info.lock);
 	mutex_init(&audio_mvs_info.in_lock);
@@ -1612,6 +1621,20 @@ static int audio_mvs_open(struct inode *inode, struct file *file)
 		       "audio_mvs_suspend");
 	pm_qos_add_request(&audio_mvs_info.pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
 				PM_QOS_DEFAULT_VALUE);
+=======
+	mutex_lock(&audio_mvs_info.lock);
+
+	if (audio_mvs_info.state != AUDIO_MVS_CLOSED) {
+		MM_ERR("MVS driver exists, state %d\n",
+				audio_mvs_info.state);
+
+		rc = -EBUSY;
+		mutex_unlock(&audio_mvs_info.lock);
+		goto done;
+	}
+
+	mutex_unlock(&audio_mvs_info.lock);
+>>>>>>> abb6419... Sync with TeamHackLG
 
 	audio_mvs_info.rpc_endpt = msm_rpc_connect_compatible(MVS_PROG,
 					MVS_VERS_COMP_VER2,
@@ -1652,26 +1675,18 @@ static int audio_mvs_open(struct inode *inode, struct file *file)
 
 	mutex_lock(&audio_mvs_info.lock);
 
-	if (audio_mvs_info.state == AUDIO_MVS_CLOSED) {
-
-		if (audio_mvs_info.task != NULL ||
+	if (audio_mvs_info.task != NULL ||
 			audio_mvs_info.rpc_endpt != NULL) {
-			rc = audio_mvs_alloc_buf(&audio_mvs_info);
+		rc = audio_mvs_alloc_buf(&audio_mvs_info);
 
-			if (rc == 0) {
-				audio_mvs_info.state = AUDIO_MVS_OPENED;
-				file->private_data = &audio_mvs_info;
-			}
-		}  else {
-			MM_ERR("MVS thread and RPC end point do not exist\n");
-
-			rc = -ENODEV;
+		if (rc == 0) {
+			audio_mvs_info.state = AUDIO_MVS_OPENED;
+			file->private_data = &audio_mvs_info;
 		}
-	} else {
-		MM_ERR("MVS driver exists, state %d\n",
-		       audio_mvs_info.state);
+	}  else {
+		MM_ERR("MVS thread and RPC end point do not exist\n");
 
-		rc = -EBUSY;
+		rc = -ENODEV;
 	}
 
 	mutex_unlock(&audio_mvs_info.lock);

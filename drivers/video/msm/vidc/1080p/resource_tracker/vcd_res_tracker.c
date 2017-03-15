@@ -215,8 +215,12 @@ static int res_trk_pmem_alloc
 			addr->alloc_handle = ion_alloc(
 					ddl_context->video_ion_client,
 					 alloc_size, SZ_4K,
+<<<<<<< HEAD
 					res_trk_get_mem_type(),
 					res_trk_get_ion_flags());
+=======
+					res_trk_get_mem_type(), 0);
+>>>>>>> abb6419... Sync with TeamHackLG
 			if (IS_ERR_OR_NULL(addr->alloc_handle)) {
 				DDL_MSG_ERROR("%s() :DDL ION alloc failed\n",
 						__func__);

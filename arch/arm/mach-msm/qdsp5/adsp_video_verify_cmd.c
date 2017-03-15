@@ -3,7 +3,11 @@
  * Verificion code for aDSP VDEC packets from userspace.
  *
  * Copyright (C) 2008 Google, Inc.
+<<<<<<< HEAD
  * Copyright (c) 2008-2010 The Linux Foundation. All rights reserved.
+=======
+ * Copyright (c) 2008-2010, 2012 The Linux Foundation. All rights reserved.
+>>>>>>> abb6419... Sync with TeamHackLG
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -17,7 +21,6 @@
  */
 
 #include <linux/io.h>
-#include <linux/android_pmem.h>
 
 #include <mach/qdsp5/qdsp5vdeccmdi.h>
 #include "adsp.h"

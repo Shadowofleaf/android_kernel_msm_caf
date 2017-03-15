@@ -1,7 +1,11 @@
 /* arch/arm/mach-msm/qdsp5/adsp_driver.c
  *
  * Copyright (C) 2008 Google, Inc.
+<<<<<<< HEAD
  * Copyright (c) 2009 The Linux Foundation. All rights reserved.
+=======
+ * Copyright (c) 2009, 2012 The Linux Foundation. All rights reserved.
+>>>>>>> abb6419... Sync with TeamHackLG
  * Author: Iliyan Malchev <ibm@android.com>
  *
  * This software is licensed under the terms of the GNU General Public
@@ -27,7 +31,6 @@
 #include "adsp.h"
 
 #include <linux/msm_adsp.h>
-#include <linux/android_pmem.h>
 #include <mach/debug_mm.h>
 
 struct adsp_pmem_info {
@@ -124,8 +127,67 @@ static int adsp_pmem_add(struct msm_adsp_module *module,
 	struct adsp_pmem_region *region;
 	int rc = -EINVAL;
 
+<<<<<<< HEAD
 	mutex_lock(&module->pmem_regions_lock);
 	region = kmalloc(sizeof(*region), GFP_KERNEL);
+=======
+	region->client = msm_ion_client_create(UINT_MAX, "Video_Client");
+	if (IS_ERR_OR_NULL(region->client)) {
+		pr_err("Unable to create ION client\n");
+		goto client_error;
+	}
+	region->handle = ion_import_dma_buf(region->client, fd);
+	if (IS_ERR_OR_NULL(region->handle)) {
+		pr_err("%s: could not get handle of the given fd\n", __func__);
+		goto import_error;
+	}
+	rc = ion_handle_get_flags(region->client, region->handle, &ionflag);
+	if (rc) {
+		pr_err("%s: could not get flags for the handle\n", __func__);
+		goto flag_error;
+	}
+	temp_ptr = ion_map_kernel(region->client, region->handle);
+	if (IS_ERR_OR_NULL(temp_ptr)) {
+		pr_err("%s: could not get virtual address\n", __func__);
+		goto map_error;
+	}
+	region->kvaddr = (unsigned long) temp_ptr;
+	region->ion_flag = (unsigned long) ionflag;
+
+	rc = ion_phys(region->client, region->handle, &region->paddr,
+					(size_t *)(&region->len));
+	if (rc) {
+		pr_err("%s: could not get physical address\n", __func__);
+		goto ion_error;
+	}
+	return rc;
+ion_error:
+	ion_unmap_kernel(region->client, region->handle);
+map_error:
+	ion_free(region->client, region->handle);
+flag_error:
+import_error:
+	ion_client_destroy(region->client);
+client_error:
+	return -EINVAL;
+}
+
+static void free_ion_region(struct ion_client *client,
+			struct ion_handle *handle)
+{
+	ion_unmap_kernel(client, handle);
+	ion_free(client, handle);
+	ion_client_destroy(client);
+}
+
+static int adsp_ion_add(struct msm_adsp_module *module,
+			 struct adsp_ion_info *info)
+{
+	struct adsp_ion_region *region;
+	int rc = -EINVAL;
+	mutex_lock(&module->ion_regions_lock);
+	region = kmalloc(sizeof(struct adsp_ion_region), GFP_KERNEL);
+>>>>>>> abb6419... Sync with TeamHackLG
 	if (!region) {
 		rc = -ENOMEM;
 		goto end;
@@ -200,7 +262,32 @@ static int adsp_pmem_lookup_vaddr(struct msm_adsp_module *module, void **addr,
 	return *region ? 0 : -1;
 }
 
+<<<<<<< HEAD
 int adsp_pmem_fixup_kvaddr(struct msm_adsp_module *module, void **addr,
+=======
+int adsp_ion_do_cache_op(struct msm_adsp_module *module,
+				void *addr, void *paddr, unsigned long len,
+				unsigned long offset, int cmd)
+{
+	struct adsp_ion_region   *region;
+	void *vaddr = addr;
+	int ret;
+	ret = adsp_ion_lookup_vaddr(module, &vaddr, len, &region);
+	if (ret) {
+		MM_ERR("not patching %s (paddr & kvaddr)," \
+			" lookup (%p, %ld) failed\n",
+			module->name, vaddr, len);
+		return ret;
+	}
+	if ((region->ion_flag == ION_FLAG_CACHED) && region->handle) {
+		len = ((((len) + 31) & (~31)) + 32);
+		ret = msm_ion_do_cache_op(region->client, region->handle,
+				(void *)paddr, len, cmd);
+	}
+	return ret;
+}
+int adsp_ion_fixup_kvaddr(struct msm_adsp_module *module, void **addr,
+>>>>>>> abb6419... Sync with TeamHackLG
 			   unsigned long *kvaddr, unsigned long len,
 			   struct file **filp, unsigned long *offset)
 {

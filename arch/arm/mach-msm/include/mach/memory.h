@@ -80,6 +80,7 @@ int platform_physical_active_pages(u64, u64);
 int platform_physical_low_power_pages(u64, u64);
 int msm_get_memory_type_from_name(const char *memtype_name);
 unsigned long get_ddr_size(void);
+int msm_get_memory_type_from_name(const char *memtype_name);
 
 extern int (*change_memory_power)(u64, u64, int);
 
@@ -121,12 +122,21 @@ void find_membank0_hole(void);
 #endif
 
 /*
+<<<<<<< HEAD
  *  * Need a temporary unique variable that no one will ever see to
  *   * hold the compat string. Line number gives this easily.
  *    * Need another layer of indirection to get __LINE__ to expand
  *     * properly as opposed to appending and ending up with
  *      * __compat___LINE__
  *       */
+=======
+ * Need a temporary unique variable that no one will ever see to
+ * hold the compat string. Line number gives this easily.
+ * Need another layer of indirection to get __LINE__ to expand
+ * properly as opposed to appending and ending up with
+ * __compat___LINE__
+ */
+>>>>>>> abb6419... Sync with TeamHackLG
 #define __CONCAT(a, b)	___CONCAT(a, b)
 #define ___CONCAT(a, b)	a ## b
 

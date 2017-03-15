@@ -4,7 +4,11 @@
  *
  * Copyright (C) 2008 Google, Inc.
  * Copyright (C) 2008 HTC Corporation
+<<<<<<< HEAD
  * Copyright (c) 2009-2012, The Linux Foundation. All rights reserved.
+=======
+ * Copyright (c) 2009-2013, The Linux Foundation. All rights reserved.
+>>>>>>> abb6419... Sync with TeamHackLG
  *
  * This code is based in part on arch/arm/mach-msm/qdsp5/audio_mp3.c
  *
@@ -644,6 +648,7 @@ static long audio_voicememo_ioctl(struct file *file,
 
 	if (cmd == AUDIO_GET_STATS) {
 		struct msm_audio_stats stats;
+		memset(&stats, 0, sizeof(stats));
 		mutex_lock(&audio->dsp_lock);
 		stats.byte_count = audio->byte_count;
 		stats.sample_count = audio->frame_count;

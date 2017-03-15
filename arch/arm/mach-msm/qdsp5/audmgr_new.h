@@ -1,6 +1,10 @@
 /* arch/arm/mach-msm/qdsp5/audmgr.h
  *
+<<<<<<< HEAD
  * Copyright 2008 (c) The Linux Foundation. All rights reserved.
+=======
+ * Copyright 2008,2012 (c) The Linux Foundation. All rights reserved.
+>>>>>>> abb6419... Sync with TeamHackLG
  * Copyright (C) 2008 Google, Inc.
  *
  * This software is licensed under the terms of the GNU General Public

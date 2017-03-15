@@ -1,6 +1,10 @@
 /* audio_wma.c - wma audio decoder driver
  *
+<<<<<<< HEAD
  * Copyright (c) 2009, 2011-2012, The Linux Foundation. All rights reserved.
+=======
+ * Copyright (c) 2009, 2011-2013, The Linux Foundation. All rights reserved.
+>>>>>>> abb6419... Sync with TeamHackLG
  *
  * Based on the mp3 native driver in arch/arm/mach-msm/qdsp5/audio_mp3.c
  *
@@ -267,8 +271,10 @@ static int audio_enable(struct audio *audio)
 		cfg.snd_method = RPC_SND_METHOD_MIDI;
 
 		rc = audmgr_enable(&audio->audmgr, &cfg);
-		if (rc < 0)
+		if (rc < 0) {
+			msm_adsp_dump(audio->audplay);
 			return rc;
+		}
 	}
 
 	if (msm_adsp_enable(audio->audplay)) {
@@ -313,8 +319,11 @@ static int audio_disable(struct audio *audio)
 		wake_up(&audio->read_wait);
 		msm_adsp_disable(audio->audplay);
 		audpp_disable(audio->dec_id, audio);
-		if (audio->pcm_feedback == TUNNEL_MODE_PLAYBACK)
-			audmgr_disable(&audio->audmgr);
+		if (audio->pcm_feedback == TUNNEL_MODE_PLAYBACK) {
+			rc = audmgr_disable(&audio->audmgr);
+			if (rc < 0)
+				msm_adsp_dump(audio->audplay);
+		}
 		audio->out_needed = 0;
 		rmt_put_resource(audio);
 		audio->rmt_resource_released = 1;
@@ -1322,7 +1331,10 @@ static int audwma_process_eos(struct audio *audio,
 		rc = -EBUSY;
 		goto done;
 	}
-
+	if (mfield_size > audio->out[0].size) {
+		rc = -EINVAL;
+		goto done;
+	}
 	if (copy_from_user(frame->data, buf_start, mfield_size)) {
 		rc = -EFAULT;
 		goto done;
@@ -1373,6 +1385,10 @@ static ssize_t audio_write(struct file *file, const char __user *buf,
 					rc = -EFAULT;
 					break;
 				} else  if (mfield_size > count) {
+					rc = -EINVAL;
+					break;
+				}
+				if (mfield_size > audio->out[0].size) {
 					rc = -EINVAL;
 					break;
 				}

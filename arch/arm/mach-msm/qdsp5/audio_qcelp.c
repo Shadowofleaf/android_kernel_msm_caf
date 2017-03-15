@@ -2,7 +2,11 @@
  *
  * qcelp 13k audio decoder device
  *
+<<<<<<< HEAD
  * Copyright (c) 2008-2009, 2011-2012 The Linux Foundation. All rights reserved.
+=======
+ * Copyright (c) 2008-2009, 2011-2013 The Linux Foundation. All rights reserved.
+>>>>>>> abb6419... Sync with TeamHackLG
  *
  * This code is based in part on audio_mp3.c, which is
  * Copyright (C) 2008 Google, Inc.
@@ -250,8 +254,10 @@ static int audqcelp_enable(struct audio *audio)
 		cfg.snd_method = RPC_SND_METHOD_MIDI;
 
 		rc = audmgr_enable(&audio->audmgr, &cfg);
-		if (rc < 0)
+		if (rc < 0) {
+			msm_adsp_dump(audio->audplay);
 			return rc;
+		}
 	}
 
 	if (msm_adsp_enable(audio->audplay)) {
@@ -295,8 +301,11 @@ static int audqcelp_disable(struct audio *audio)
 		wake_up(&audio->read_wait);
 		msm_adsp_disable(audio->audplay);
 		audpp_disable(audio->dec_id, audio);
-		if (audio->pcm_feedback == TUNNEL_MODE_PLAYBACK)
-			audmgr_disable(&audio->audmgr);
+		if (audio->pcm_feedback == TUNNEL_MODE_PLAYBACK) {
+			rc = audmgr_disable(&audio->audmgr);
+			if (rc < 0)
+				msm_adsp_dump(audio->audplay);
+		}
 		audio->out_needed = 0;
 		rmt_put_resource(audio);
 		audio->rmt_resource_released = 1;
@@ -1193,7 +1202,10 @@ static int audqcelp_process_eos(struct audio *audio,
 		rc = -EBUSY;
 		goto done;
 	}
-
+	if (mfield_size > audio->out[0].size) {
+		rc = -EINVAL;
+		goto done;
+	}
 	if (copy_from_user(frame->data, buf_start, mfield_size)) {
 		rc = -EFAULT;
 		goto done;
@@ -1251,6 +1263,10 @@ static ssize_t audqcelp_write(struct file *file, const char __user *buf,
 					rc = -EINVAL;
 					break;
 				}
+				if (mfield_size > audio->out[0].size) {
+					rc = -EINVAL;
+					break;
+				}
 				MM_DBG("mf offset_val %x\n", mfield_size);
 				if (copy_from_user(cpy_ptr, buf, mfield_size)) {
 					rc = -EFAULT;
@@ -1279,7 +1295,10 @@ static ssize_t audqcelp_write(struct file *file, const char __user *buf,
 			}
 			frame->mfield_sz = mfield_size;
 		}
-
+		if (mfield_size > frame->size) {
+			rc = -EINVAL;
+			break;
+		}
 		xfer = (count > (frame->size - mfield_size)) ?
 			(frame->size - mfield_size) : count;
 		if (copy_from_user(cpy_ptr, buf, xfer)) {

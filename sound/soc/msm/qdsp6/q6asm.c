@@ -24,7 +24,7 @@
 #include <linux/spinlock.h>
 #include <linux/slab.h>
 #include <linux/msm_audio.h>
-#include <linux/android_pmem.h>
+
 #include <linux/memory_alloc.h>
 #include <linux/debugfs.h>
 #include <linux/time.h>
@@ -540,8 +540,12 @@ int q6asm_audio_client_buf_alloc(unsigned int dir,
 						__func__, bufsz_4k_aligned,
 						bufsz);
 					buf[cnt].handle = ion_alloc
+<<<<<<< HEAD
 						(buf[cnt].client,
 						bufsz_4k_aligned, SZ_4K,
+=======
+						(buf[cnt].client, bufsz, SZ_4K,
+>>>>>>> abb6419... Sync with TeamHackLG
 						(0x1 << ION_AUDIO_HEAP_ID), 0);
 					if (IS_ERR_OR_NULL((void *)
 						buf[cnt].handle)) {

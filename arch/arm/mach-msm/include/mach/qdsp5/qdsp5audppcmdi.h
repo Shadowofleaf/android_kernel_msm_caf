@@ -15,7 +15,11 @@ REFERENCES
 EXTERNALIZED FUNCTIONS
   None
 
+<<<<<<< HEAD
 Copyright(c) 1992-2009, 2012 The Linux Foundation. All rights reserved.
+=======
+Copyright(c) 1992-2009, 2012-2013 The Linux Foundation. All rights reserved.
+>>>>>>> abb6419... Sync with TeamHackLG
 
 This software is licensed under the terms of the GNU General Public
 License version 2, as published by the Free Software Foundation, and
@@ -1046,6 +1050,14 @@ struct audpp_cmd_cfg_object_params_srstm_l {
 	audpp_cmd_cfg_object_params_common	common;
 	unsigned short				v[SRS_PARAMS_MAX_L];
 } __packed;
+<<<<<<< HEAD
+=======
+#define AUDPP_CMD_SAMPLING_FREQUENCY	7
+#define AUDPP_CMD_QRUMBLE		9
+#define AUDPP_CMD_SRS			18
+#define AUDPP_DISABLE_FEATS_LSW		2
+#define AUDPP_DISABLE_FEATS_MSW		3
+>>>>>>> abb6419... Sync with TeamHackLG
 
 #endif /* QDSP5AUDPPCMDI_H */
 

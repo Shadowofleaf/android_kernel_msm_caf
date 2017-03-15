@@ -3,7 +3,11 @@
  * interface to "audmgr" service on the baseband cpu
  *
  * Copyright (C) 2008 Google, Inc.
+<<<<<<< HEAD
  * Copyright (c) 2009, The Linux Foundation. All rights reserved.
+=======
+ * Copyright (c) 2009, 2012, 2013 The Linux Foundation. All rights reserved.
+>>>>>>> abb6419... Sync with TeamHackLG
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -42,6 +46,14 @@ struct audmgr_global {
 	struct msm_rpc_endpoint *ept;
 	struct task_struct *task;
 	uint32_t rpc_version;
+<<<<<<< HEAD
+=======
+	uint32_t rx_device;
+	uint32_t tx_device;
+	int cad;
+	struct device_info_callback *device_cb[MAX_DEVICE_INFO_CALLBACK];
+
+>>>>>>> abb6419... Sync with TeamHackLG
 };
 static DEFINE_MUTEX(audmgr_lock);
 
@@ -88,10 +100,45 @@ static void process_audmgr_callback(struct audmgr_global *amg,
 		MM_INFO("rpc READY handle=0x%08x\n", am->handle);
 		break;
 	case RPC_AUDMGR_STATUS_CODEC_CONFIG: {
+<<<<<<< HEAD
 		uint32_t volume;
 		volume = be32_to_cpu(args->u.volume);
 		MM_INFO("rpc CODEC_CONFIG volume=0x%08x\n", volume);
 		am->state = STATE_ENABLED;
+=======
+		MM_INFO("rpc CODEC_CONFIG\n");
+		am = (struct audmgr *) be32_to_cpu(
+			((struct rpc_audmgr_cb_ready *)args)->client_data);
+		if (!am)
+			return;
+		if (am->state != STATE_ENABLED)
+			am->state = STATE_ENABLED;
+		if (!amg->cad) {
+			wake_up(&am->wait);
+			break;
+		}
+
+		if (am->evt.session_info == SESSION_PLAYBACK &&
+			am->evt.dev_type.rx_device != amg->rx_device) {
+			am->evt.dev_type.rx_device = amg->rx_device;
+			am->evt.dev_type.tx_device = 0;
+			am->evt.acdb_id = am->evt.dev_type.rx_device;
+		}
+		if (am->evt.session_info == SESSION_RECORDING &&
+			am->evt.dev_type.tx_device != amg->tx_device) {
+			am->evt.dev_type.rx_device = 0;
+			am->evt.dev_type.tx_device = amg->tx_device;
+			am->evt.acdb_id = am->evt.dev_type.tx_device;
+		}
+
+		while ((amg->device_cb[i] != NULL) &&
+				(i < MAX_DEVICE_INFO_CALLBACK) &&
+				(amg->cad)) {
+			amg->device_cb[i]->func(&(am->evt),
+					amg->device_cb[i]->private);
+			i++;
+		}
+>>>>>>> abb6419... Sync with TeamHackLG
 		wake_up(&am->wait);
 		break;
 	}
@@ -117,6 +164,40 @@ static void process_audmgr_callback(struct audmgr_global *amg,
 		am->state = STATE_ERROR;
 		wake_up(&am->wait);
 		break;
+<<<<<<< HEAD
+=======
+	case RPC_AUDMGR_STATUS_DEVICE_INFO:
+		MM_INFO("rpc DEVICE_INFO\n");
+		if (!amg->cad)
+			break;
+		temp = (struct rpc_audmgr_cb_device_info *)args;
+		am = (struct audmgr *) be32_to_cpu(temp->client_data);
+		if (!am)
+			return;
+		if (am->evt.session_info == SESSION_PLAYBACK) {
+			am->evt.dev_type.rx_device =
+					be32_to_cpu(temp->d.rx_device);
+			am->evt.dev_type.tx_device = 0;
+			am->evt.acdb_id = am->evt.dev_type.rx_device;
+			amg->rx_device = am->evt.dev_type.rx_device;
+		} else if (am->evt.session_info == SESSION_RECORDING) {
+			am->evt.dev_type.rx_device = 0;
+			am->evt.dev_type.tx_device =
+					be32_to_cpu(temp->d.tx_device);
+			am->evt.acdb_id = am->evt.dev_type.tx_device;
+			amg->tx_device = am->evt.dev_type.tx_device;
+		}
+		am->evt.dev_type.ear_mute =
+					be32_to_cpu(temp->d.ear_mute);
+		am->evt.dev_type.mic_mute =
+					be32_to_cpu(temp->d.mic_mute);
+		am->evt.dev_type.volume =
+					be32_to_cpu(temp->d.volume);
+		break;
+	case RPC_AUDMGR_STATUS_DEVICE_CONFIG:
+		MM_ERR("rpc DEVICE_CONFIG\n");
+		break;
+>>>>>>> abb6419... Sync with TeamHackLG
 	default:
 		break;
 	}

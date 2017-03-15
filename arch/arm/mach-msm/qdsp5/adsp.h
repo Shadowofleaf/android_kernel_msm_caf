@@ -20,6 +20,10 @@
 
 #include <linux/types.h>
 #include <linux/msm_adsp.h>
+<<<<<<< HEAD
+=======
+#include <linux/msm_ion.h>
+>>>>>>> abb6419... Sync with TeamHackLG
 #include <mach/msm_rpcrouter.h>
 #include <mach/msm_adsp.h>
 
@@ -148,6 +152,7 @@ enum {
 	RPC_ADSP_RTOS_CMD_SET_STATE,
 	RPC_ADSP_RTOS_CMD_REMOTE_INIT_INFO_EVENT,
 	RPC_ADSP_RTOS_CMD_GET_INIT_INFO,
+	RPC_ADSP_RTOS_CMD_CORE_DUMP,
 };
 
 enum rpc_adsp_rtos_mod_status_type {
