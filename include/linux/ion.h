@@ -60,6 +60,15 @@ enum ion_heap_type {
 					   maintenance when the buffer is
 					   mapped for dma */
 
+/**
+ * heap flags - the lower 16 bits are used by core ion, the upper 16
+ * bits are reserved for use by the heaps themselves.
+ */
+#define ION_FLAG_CACHED 1		/* mappings of this buffer should be
+					   cached, ion will do cache
+					   maintenance when the buffer is
+					   mapped for dma */
+
 #ifdef __KERNEL__
 #include <linux/err.h>
 #include <mach/ion.h>
@@ -652,7 +661,4 @@ struct ion_custom_data {
  */
 #define ION_IOC_GET_FLAGS_COMPAT	_IOWR(ION_IOC_MAGIC, 10, \
 						struct ion_flag_data)
-
-
->>>>>>> abb6419... Sync with TeamHackLG
 #endif /* _LINUX_ION_H */
