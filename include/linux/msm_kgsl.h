@@ -229,6 +229,55 @@ struct kgsl_version {
 
 #define KGSL_PERFCOUNTER_NOT_USED 0xFFFFFFFF
 
+struct kgsl_iommu_ctx {
+	const char *iommu_ctx_name;
+	enum kgsl_iommu_context_id ctx_id;
+};
+
+struct kgsl_device_iommu_data {
+	const struct kgsl_iommu_ctx *iommu_ctxs;
+	int iommu_ctx_count;
+	unsigned int physstart;
+	unsigned int physend;
+};
+
+struct kgsl_device_platform_data {
+	struct kgsl_pwrlevel pwrlevel[KGSL_MAX_PWRLEVELS];
+	int init_level;
+	int num_levels;
+	int (*set_grp_async)(void);
+	unsigned int idle_timeout;
+	bool strtstp_sleepwake;
+	unsigned int nap_allowed;
+	unsigned int clk_map;
+	unsigned int idle_needed;
+	struct msm_bus_scale_pdata *bus_scale_table;
+	struct kgsl_device_iommu_data *iommu_data;
+	int iommu_count;
+	struct msm_dcvs_core_info *core_info;
+};
+
+#endif
+/* Performance counter groups */
+
+#define KGSL_PERFCOUNTER_GROUP_CP 0x0
+#define KGSL_PERFCOUNTER_GROUP_RBBM 0x1
+#define KGSL_PERFCOUNTER_GROUP_PC 0x2
+#define KGSL_PERFCOUNTER_GROUP_VFD 0x3
+#define KGSL_PERFCOUNTER_GROUP_HLSQ 0x4
+#define KGSL_PERFCOUNTER_GROUP_VPC 0x5
+#define KGSL_PERFCOUNTER_GROUP_TSE 0x6
+#define KGSL_PERFCOUNTER_GROUP_RAS 0x7
+#define KGSL_PERFCOUNTER_GROUP_UCHE 0x8
+#define KGSL_PERFCOUNTER_GROUP_TP 0x9
+#define KGSL_PERFCOUNTER_GROUP_SP 0xA
+#define KGSL_PERFCOUNTER_GROUP_RB 0xB
+#define KGSL_PERFCOUNTER_GROUP_PWR 0xC
+#define KGSL_PERFCOUNTER_GROUP_VBIF 0xD
+#define KGSL_PERFCOUNTER_GROUP_VBIF_PWR 0xE
+
+#define KGSL_PERFCOUNTER_NOT_USED 0xFFFFFFFF
+
 /* structure holds list of ibs */
 struct kgsl_ibdesc {
 	unsigned int gpuaddr;
@@ -367,6 +416,8 @@ struct kgsl_map_user_mem {
 	unsigned int offset;
 	unsigned int hostptr;   /*input param */
 	enum kgsl_user_mem_type memtype;
+	unsigned int reserved;	/* May be required to add
+				params for another mem type */
 	unsigned int flags;
 };
 
@@ -525,12 +576,6 @@ struct kgsl_cff_syncmem {
 
 #define IOCTL_KGSL_CFF_SYNCMEM \
 	_IOW(KGSL_IOC_TYPE, 0x30, struct kgsl_cff_syncmem)
-
-/*
- * A timestamp event allows the user space to register an action following an
- * expired timestamp. Note IOCTL_KGSL_TIMESTAMP_EVENT has been redefined to
- * _IOWR to support fences which need to return a fd for the priv parameter.
- */
 
 struct kgsl_timestamp_event {
 	int type;                /* Type of event (see list below) */
