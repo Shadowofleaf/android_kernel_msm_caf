@@ -52,7 +52,6 @@ struct kgsl_snapshot_section_header {
 #define KGSL_SNAPSHOT_SECTION_DEBUG        0x0901
 #define KGSL_SNAPSHOT_SECTION_DEBUGBUS     0x0A01
 #define KGSL_SNAPSHOT_SECTION_GPU_OBJECT   0x0B01
-#define KGSL_SNAPSHOT_SECTION_MEMLIST      0x0E01
 
 #define KGSL_SNAPSHOT_SECTION_END          0xFFFF
 
@@ -104,17 +103,6 @@ struct kgsl_snapshot_rb {
 	int count;  /* Number of dwords in the dump */
 } __packed;
 
-/* Replay or Memory list section, both sections have same header */
-struct kgsl_snapshot_replay_mem_list {
-	/*
-	 * Number of IBs to replay for replay section or
-	 * number of memory list entries for mem list section
-	 */
-	int num_entries;
-	/* Pagetable base to which the replay IBs or memory entries belong */
-	__u32 ptbase;
-} __packed;
-
 /* Indirect buffer sub-section header */
 struct kgsl_snapshot_ib {
 	__u32 gpuaddr; /* GPU address of the the IB */
@@ -156,7 +144,6 @@ struct kgsl_snapshot_istore {
 #define SNAPSHOT_DEBUG_CP_PFP_RAM 9
 #define SNAPSHOT_DEBUG_CP_ROQ     10
 #define SNAPSHOT_DEBUG_SHADER_MEMORY 11
-#define SNAPSHOT_DEBUG_CP_MERCIU 12
 
 struct kgsl_snapshot_debug {
 	int type;    /* Type identifier for the attached tata */
@@ -253,22 +240,12 @@ static inline void *kgsl_snapshot_add_section(struct kgsl_device *device,
 /* A common helper function to dump a range of registers.  This will be used in
  * the GPU specific devices like this:
  *
- * struct kgsl_snapshot_registers_list list;
- * struct kgsl_snapshot_registers priv[2];
- *
- * priv[0].regs = registers_array;;
- * priv[o].count = num_registers;
- * priv[1].regs = registers_array_new;;
- * priv[1].count = num_registers_new;
- *
- * list.registers = priv;
- * list.count = 2;
+ * struct kgsl_snapshot_registers priv;
+ * priv.regs = registers_array;;
+ * priv.count = num_registers;
  *
  * kgsl_snapshot_add_section(device, KGSL_SNAPSHOT_SECTION_REGS, snapshot,
- *	remain, kgsl_snapshot_dump_regs, &list).
- *
- * Pass in a struct pointing to a list of register definitions as described
- * below:
+ *	remain, kgsl_snapshot_dump_regs, &priv).
  *
  * Pass in an array of register range pairs in the form of:
  * start reg, stop reg
@@ -278,13 +255,6 @@ static inline void *kgsl_snapshot_add_section(struct kgsl_device *device,
 struct kgsl_snapshot_registers {
 	unsigned int *regs;  /* Pointer to the array of register ranges */
 	int count;	     /* Number of entries in the array */
-};
-
-struct kgsl_snapshot_registers_list {
-	/* Pointer to an array of register lists */
-	struct kgsl_snapshot_registers *registers;
-	/* Number of registers lists in the array */
-	int count;
 };
 
 int kgsl_snapshot_dump_regs(struct kgsl_device *device, void *snapshot,
@@ -322,9 +292,6 @@ void *kgsl_snapshot_indexed_registers(struct kgsl_device *device,
 /* Freeze a GPU buffer so it can be dumped in the snapshot */
 int kgsl_snapshot_get_object(struct kgsl_device *device, unsigned int ptbase,
 	unsigned int gpuaddr, unsigned int size, unsigned int type);
-
-int kgsl_snapshot_have_object(struct kgsl_device *device, unsigned int ptbase,
-	unsigned int gpuaddr, unsigned int size);
 
 #endif
 #endif
