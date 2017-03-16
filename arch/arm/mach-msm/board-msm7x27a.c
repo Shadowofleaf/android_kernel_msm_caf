@@ -782,9 +782,11 @@ static void fix_sizes(void)
         if (get_ddr_size() > SZ_256M)
                 pmem_adsp_size = CAMERA_ZSL_SIZE;
 	msm_ion_camera_size = pmem_adsp_size;
+	msm_ion_audio_size = (MSM_PMEM_AUDIO_SIZE + PMEM_KERNEL_EBI1_SIZE);
+	msm_ion_sf_size = pmem_mdp_size;
+#ifdef CONFIG_CMA
 	msm_ion_camera_size_carving = 0;
 #else
-	msm_ion_camera_size = pmem_adsp_size;
 	msm_ion_camera_size_carving = msm_ion_camera_size;
 #endif
 #endif
@@ -943,9 +945,8 @@ static void __init size_ion_devices(void)
 static void __init reserve_ion_memory(void)
 {
 #if defined(CONFIG_ION_MSM) && defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size += PMEM_KERNEL_EBI1_SIZE;
-	msm7x27a_reserve_table[MEMTYPE_EBI1].size +=
-		msm_ion_camera_size_carving;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_camera_size;
+	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_audio_size;
 	msm7x27a_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
 #endif
 }
@@ -974,6 +975,24 @@ static void __init msm7x27a_reserve(void)
 {
 	reserve_info = &msm7x27a_reserve_info;
 	msm_reserve();
+#ifdef CONFIG_CMA
+	dma_declare_contiguous(
+			&ion_cma_device.dev,
+			msm_ion_camera_size,
+			CAMERA_HEAP_BASE,
+			0xa0000000);
+#endif
+
+#ifdef CONFIG_SRECORDER_MSM
+    if (0x0 != get_mempools_pstart_addr())
+    {
+        s_srecorder_reserved_mem_phys_start_addr = get_mempools_pstart_addr();// - SRECORDER_RESERVED_MEM_SIZE;
+    }
+    else
+    {
+        printk(">>>> Can't know the start address for S-Recorder's reserved memory!\n");
+    }
+#endif /* CONFIG_SRECORDER_MSM */
 }
 
 static void __init msm8625_reserve(void)
