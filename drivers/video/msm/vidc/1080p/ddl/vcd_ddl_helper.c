@@ -263,36 +263,24 @@ u32 ddl_decoder_dpb_init(struct ddl_client_context *ddl)
 	if (dpb > DDL_MAX_BUFFER_COUNT)
 		dpb = DDL_MAX_BUFFER_COUNT;
 	for (i = 0; i < dpb; i++) {
-		vcd_frm = &decoder->dp_buf.dec_pic_buffers[i].vcd_frm;
-		if (!res_trk_check_for_sec_session()) {
-			u8 *kernel_vaddr = NULL;
-			if (luma_size <= vcd_frm->alloc_len) {
-				kernel_vaddr = (u8 *)ion_map_kernel(
-						ddl_context->video_ion_client,
-						vcd_frm->buff_ion_handle);
-				if (IS_ERR_OR_NULL(kernel_vaddr)) {
-					DDL_MSG_ERROR("%s(): ION_MAP for "\
-					"DPB[%u] failed\n", __func__, i);
-				} else {
-					memset(kernel_vaddr, 0x10101010,
-						luma_size);
-					memset(kernel_vaddr + luma_size,
-						0x80808080,
-						vcd_frm->alloc_len - luma_size);
-					if (vcd_frm->ion_flag ==
-						ION_FLAG_CACHED) {
-						msm_ion_do_cache_op(
-						ddl_context->video_ion_client,
-						vcd_frm->buff_ion_handle,
-						(unsigned long *)kernel_vaddr,
-						(unsigned long)vcd_frm->
-						alloc_len,
-						ION_IOC_CLEAN_INV_CACHES);
-					}
-					ion_unmap_kernel(
-						ddl_context->video_ion_client,
-						vcd_frm->buff_ion_handle);
-					kernel_vaddr = NULL;
+		if (!(res_trk_check_for_sec_session()) &&
+			frame[i].vcd_frm.virtual) {
+			if (luma_size <= frame[i].vcd_frm.alloc_len) {
+				memset(frame[i].vcd_frm.virtual,
+					 0x10101010, luma_size);
+				memset(frame[i].vcd_frm.virtual + luma_size,
+					 0x80808080,
+					frame[i].vcd_frm.alloc_len - luma_size);
+				if (frame[i].vcd_frm.ion_flag
+					== ION_FLAG_CACHED) {
+					msm_ion_do_cache_op(
+					ddl_context->video_ion_client,
+					frame[i].vcd_frm.buff_ion_handle,
+					(unsigned long *)frame[i].
+					vcd_frm.virtual,
+					(unsigned long)frame[i].
+					vcd_frm.alloc_len,
+					ION_IOC_CLEAN_INV_CACHES);
 				}
 			} else {
 				DDL_MSG_ERROR("%s: err: luma_size (%u), "\
