@@ -289,8 +289,11 @@ int mdp4_dsi_cmd_pipe_commit(int cndx, int wait)
 	undx =  vctrl->update_ndx;
 	vp = &vctrl->vlist[undx];
 	pipe = vctrl->base_pipe;
-	if (pipe == NULL) {
-		pr_err("%s: NO base pipe\n", __func__);
+	mixer = pipe->mixer_num;
+
+       mdp_update_pm(vctrl->mfd, vctrl->vsync_time);
+
+	if (vp->update_cnt == 0) {
 		mutex_unlock(&vctrl->update_lock);
 		return 0;
 	}
