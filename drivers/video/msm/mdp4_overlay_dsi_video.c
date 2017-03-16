@@ -485,6 +485,7 @@ void mdp4_dsi_vsync_init(int cndx)
 	init_completion(&vctrl->dmap_comp);
 	init_completion(&vctrl->ov_comp);
 	atomic_set(&vctrl->suspend, 1);
+	atomic_set(&vctrl->vsync_resume, 1);
 	spin_lock_init(&vctrl->spin_lock);
 	init_waitqueue_head(&vctrl->wait_queue_internal);
 	init_waitqueue_head(&vctrl->wait_queue);
@@ -522,27 +523,6 @@ void mdp4_dsi_video_base_swap(int cndx, struct mdp4_overlay_pipe *pipe)
 
 	vctrl = &vsync_ctrl_db[cndx];
 	vctrl->base_pipe = pipe;
-}
-
-/* timing generator off */
-static void mdp4_dsi_video_tg_off(struct vsycn_ctrl *vctrl)
-{
-	MDP_OUTP(MDP_BASE + DSI_VIDEO_BASE, 0); /* turn off timing generator */
-	/* some delay after turning off the tg */
-	msleep(20);
-}
-
-int mdp4_dsi_video_splash_done(void)
-{
-	struct vsycn_ctrl *vctrl;
-	int cndx = 0;
-
-	vctrl = &vsync_ctrl_db[cndx];
-
-	mdp4_dsi_video_tg_off(vctrl);
-	mipi_dsi_controller_cfg(0);
-
-	return 0;
 }
 
 int mdp4_dsi_video_on(struct platform_device *pdev)

@@ -738,7 +738,7 @@ void mdp4_dsi_rdptr_init(int cndx)
 	init_completion(&vctrl->ov_comp);
 	init_completion(&vctrl->dmap_comp);
 	spin_lock_init(&vctrl->spin_lock);
-	init_waitqueue_head(&vctrl->wait_queue);
+	atomic_set(&vctrl->vsync_resume, 1);
 	atomic_set(&vctrl->suspend, 1);
 	INIT_WORK(&vctrl->clk_work, clk_ctrl_work);
 }
@@ -1088,10 +1088,6 @@ int mdp4_dsi_cmd_on(struct platform_device *pdev)
 	mdp4_iommu_attach();
 
 	atomic_set(&vctrl->suspend, 0);
-
-	mutex_unlock(&mfd->dma->ov_mutex);
-
-	pr_debug("%s-:\n", __func__);
 
 	return ret;
 }

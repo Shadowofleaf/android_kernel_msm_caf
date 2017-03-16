@@ -472,6 +472,7 @@ void mdp4_lcdc_vsync_init(int cndx)
 	init_completion(&vctrl->dmap_comp);
 	init_completion(&vctrl->ov_comp);
 	atomic_set(&vctrl->suspend, 1);
+	atomic_set(&vctrl->vsync_resume, 1);
 	spin_lock_init(&vctrl->spin_lock);
 	init_waitqueue_head(&vctrl->wait_queue);
 }
@@ -734,18 +735,6 @@ int mdp4_lcdc_on(struct platform_device *pdev)
 	mutex_unlock(&mfd->dma->ov_mutex);
 
 	return ret;
-}
-
-/* timing generator off */
-static void mdp4_lcdc_tg_off(struct vsycn_ctrl *vctrl)
-{
-	unsigned long flags;
-
-	spin_lock_irqsave(&vctrl->spin_lock, flags);
-	MDP_OUTP(MDP_BASE + LCDC_BASE, 0); /* turn off timing generator */
-	spin_unlock_irqrestore(&vctrl->spin_lock, flags);
-
-	mdp4_lcdc_wait4vsync(0);
 }
 int mdp4_lcdc_off(struct platform_device *pdev)
 {
