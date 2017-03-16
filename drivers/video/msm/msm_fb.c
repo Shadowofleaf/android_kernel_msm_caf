@@ -2247,8 +2247,15 @@ static int msm_fb_pan_display_sub(struct fb_var_screeninfo *var,
 #ifdef CONFIG_MACH_JENA
 		msleep(200);
 #endif
-		schedule_delayed_work(&mfd->backlight_worker,
-					backlight_duration);
+			down(&mfd->sem);
+			mfd->bl_level = unset_bl_level;
+			pdata->set_backlight(mfd);
+			bl_level_old = unset_bl_level;
+			up(&mfd->sem);
+			bl_updated = 1;
+		}
+	}
+#endif
 
 	if (info->node == 0 && (mfd->cont_splash_done)) /* primary */
 		mdp_free_splash_buffer(mfd);
