@@ -133,8 +133,10 @@ static int msm_fb_pan_idle(struct msm_fb_data_type *mfd);
 #define MSM_FB_MAX_DBGFS 1024
 #define MAX_BACKLIGHT_BRIGHTNESS 255
 
-/* 200 ms for time out */
+/* 100 ms for fence time out */
 #define WAIT_FENCE_TIMEOUT 100
+/* 200 ms for display operation time out */
+#define WAIT_DISP_OP_TIMEOUT 200
 
 int msm_fb_debugfs_file_index;
 struct dentry *msm_fb_debugfs_root;
@@ -1000,6 +1002,11 @@ static int msm_fb_blank_sub(int blank_mode, struct fb_info *info,
 	struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)info->par;
 	struct msm_fb_panel_data *pdata = NULL;
 	int ret = 0;
+
+	if (!op_enable)
+		return -EPERM;
+
+	msm_fb_pan_idle(mfd);
 
 	pdata = (struct msm_fb_panel_data *)mfd->pdev->dev.platform_data;
 	if ((!pdata) || (!pdata->on) || (!pdata->off)) {
@@ -1886,11 +1893,7 @@ static int msm_fb_release_all(struct fb_info *info, boolean is_all)
 		return -EINVAL;
 	}
 	msm_fb_pan_idle(mfd);
-
-	do {
-	        mfd->ref_cnt--;
-		pm_runtime_put(info->dev);
-	} while (is_all && mfd->ref_cnt);
+	mfd->ref_cnt--;
 
 	if ((!mfd->ref_cnt) && (mfd->op_enable)) {
 		if ((ret =
@@ -2003,12 +2006,18 @@ static int msm_fb_pan_idle(struct msm_fb_data_type *mfd)
 		mutex_unlock(&mfd->sync_mutex);
 		ret = wait_for_completion_interruptible_timeout(
 				&mfd->commit_comp,
-			msecs_to_jiffies(WAIT_FENCE_TIMEOUT));
+			msecs_to_jiffies(WAIT_DISP_OP_TIMEOUT));
 		if (ret < 0)
 			ret = -ERESTARTSYS;
 		else if (!ret)
 			pr_err("%s wait for commit_comp timeout %d %d",
 				__func__, ret, mfd->is_committing);
+		if (ret <= 0) {
+			mutex_lock(&mfd->sync_mutex);
+			mfd->is_committing = 0;
+			complete_all(&mfd->commit_comp);
+			mutex_unlock(&mfd->sync_mutex);
+		}
 	} else {
 		mutex_unlock(&mfd->sync_mutex);
 	}
