@@ -253,6 +253,7 @@ static int tvout_on(struct platform_device *pdev)
 #endif
 
 	var = &mfd->fbi->var;
+
 	userformat = var->reserved[3] >> 16;
 	if (userformat >= NTSC_M && userformat <= PAL_N)
 		external_common_state->video_resolution = userformat;
