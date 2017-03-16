@@ -22,10 +22,12 @@ struct msm_hdmi_mode_timing_info {
 	uint32_t	supported;
 };
 
-#define MSM_HDMI_MODES_CEA		1
-#define MSM_HDMI_MODES_XTND		2
-#define MSM_HDMI_MODES_DVI		4
-#define MSM_HDMI_MODES_ALL		7
+#define MSM_HDMI_MODES_CEA		(1 << 0)
+#define MSM_HDMI_MODES_XTND		(1 << 1)
+#define MSM_HDMI_MODES_DVI		(1 << 2)
+#define MSM_HDMI_MODES_ALL		(MSM_HDMI_MODES_CEA |\
+					 MSM_HDMI_MODES_XTND |\
+					 MSM_HDMI_MODES_DVI)
 
 /* all video formats defined by CEA 861D */
 #define HDMI_VFRMT_UNKNOWN		0
@@ -208,7 +210,7 @@ struct msm_hdmi_mode_timing_info {
 static inline void MSM_HDMI_MODES_INIT_TIMINGS(
 	struct msm_hdmi_mode_timing_info *lut)
 {
-  uint32_t i;
+	unsigned int i;
 
 	for (i = 0; i < HDMI_VFRMT_MAX; i++) {
 		struct msm_hdmi_mode_timing_info mode = VFRMT_NOT_SUPPORTED(i);
