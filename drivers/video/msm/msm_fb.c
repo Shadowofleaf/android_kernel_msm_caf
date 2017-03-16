@@ -134,7 +134,7 @@ static int msm_fb_pan_idle(struct msm_fb_data_type *mfd);
 #define MAX_BACKLIGHT_BRIGHTNESS 255
 
 /* 200 ms for time out */
-#define WAIT_FENCE_TIMEOUT 200
+#define WAIT_FENCE_TIMEOUT 100
 
 int msm_fb_debugfs_file_index;
 struct dentry *msm_fb_debugfs_root;
@@ -1858,14 +1858,9 @@ static int msm_fb_open(struct fb_info *info, int user)
 			pr_debug("%s:%d no mdp_set_dma_pan_info %d\n",
 				__func__, __LINE__, info->node);
 
-		if (mfd->is_panel_ready && !mfd->is_panel_ready())
-			unblank = false;
-
-		if (unblank && (mfd->panel_info.type != DTV_PANEL)) {
-			if (msm_fb_blank_sub(FB_BLANK_UNBLANK, info, TRUE)) {
-				pr_err("msm_fb_open: can't turn on display\n");
-				return -EINVAL;
-			}
+		if (msm_fb_blank_sub(FB_BLANK_UNBLANK, info, TRUE)) {
+			printk(KERN_ERR "msm_fb_open: can't turn on display!\n");
+			return -1;
 		}
 	}
 
@@ -1897,25 +1892,12 @@ static int msm_fb_release_all(struct fb_info *info, boolean is_all)
 		pm_runtime_put(info->dev);
 	} while (is_all && mfd->ref_cnt);
 
-	if (!mfd->ref_cnt) {
-		if (mfd->op_enable) {
-			if (info->node == 0) {
-				down(&mfd->sem);
-				bl_level = mfd->bl_level;
-				msm_fb_set_backlight(mfd, 0);
-				unset_bl_level = bl_level;
-				up(&mfd->sem);
-			}
-			ret = msm_fb_blank_sub(FB_BLANK_POWERDOWN, info,
-							mfd->op_enable);
-			if (ret != 0) {
-				printk(KERN_ERR "msm_fb_release: can't turn off display!\n");
-				return ret;
-			}
-		} 
-#ifdef CONFIG_FB_MSM_MDP40
-		 else {
-			msm_fb_free_base_pipe(mfd);
+	if ((!mfd->ref_cnt) && (mfd->op_enable)) {
+		if ((ret =
+		     msm_fb_blank_sub(FB_BLANK_POWERDOWN, info,
+				      mfd->op_enable)) != 0) {
+			printk(KERN_ERR "msm_fb_release: can't turn off display!\n");
+			return ret;
 		}
 #endif
 	}
