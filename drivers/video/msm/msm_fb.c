@@ -2072,7 +2072,12 @@ static int msm_fb_pan_display_ex(struct fb_var_screeninfo *var,
 static int msm_fb_pan_display(struct fb_var_screeninfo *var,
 			      struct fb_info *info)
 {
-	return msm_fb_pan_display_ex(var, info, TRUE);
+	struct mdp_display_commit disp_commit;
+	memset(&disp_commit, 0, sizeof(disp_commit));
+	disp_commit.var = *var;
+	disp_commit.wait_for_finish = TRUE;
+	memcpy(&disp_commit.var, var, sizeof(struct fb_var_screeninfo));
+	return msm_fb_pan_display_ex(info, &disp_commit);
 }
 
 static int msm_fb_pan_display_sub(struct fb_var_screeninfo *var,
