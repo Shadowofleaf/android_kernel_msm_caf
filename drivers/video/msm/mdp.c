@@ -2419,9 +2419,6 @@ void mdp4_hw_init(void)
 }
 
 #endif
-
-static int mdp_bus_scale_restore_request(void);
-
 static int mdp_on(struct platform_device *pdev)
 {
 	int ret = 0;
@@ -2484,8 +2481,7 @@ static int mdp_on(struct platform_device *pdev)
 	if (mdp_rev == MDP_REV_303 && mfd->panel.type == MIPI_CMD_PANEL) {
 
 		vsync_cntrl.dev = mfd->fbi->dev;
-		atomic_set(&vsync_cntrl.suspend, 0);
-		atomic_set(&vsync_cntrl.vsync_resume, 1);
+		atomic_set(&vsync_cntrl.suspend, 1);
 	}
 
 	mdp_histogram_ctrl_all(TRUE);

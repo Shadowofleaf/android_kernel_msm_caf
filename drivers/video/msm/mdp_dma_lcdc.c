@@ -315,6 +315,15 @@ int mdp_lcdc_on(struct platform_device *pdev)
 	mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
 
 
+		kobject_uevent(&vsync_cntrl.dev->kobj, KOBJ_ADD);
+		pr_debug("%s: kobject_uevent(KOBJ_ADD)\n", __func__);
+		vsync_cntrl.sysfs_created = 1;
+	}
+	mdp_histogram_ctrl_all(TRUE);
+#if defined(CONFIG_MACH_NEVIS3G_REV03)
+	ret = panel_next_on(pdev);
+#endif
+
 	return ret;
 }
 
