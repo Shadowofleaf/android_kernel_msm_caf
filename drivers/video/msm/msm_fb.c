@@ -1168,6 +1168,12 @@ static int msm_fb_blank(int blank_mode, struct fb_info *info)
 		fb_notifier_call_chain(FB_EVENT_BLANK, &event);
 	}
 	msm_fb_pan_idle(mfd);
+	if (mfd->op_enable == 0) {
+		if (blank_mode == FB_BLANK_UNBLANK)
+			mfd->suspend.panel_power_on = TRUE;
+		else
+			mfd->suspend.panel_power_on = FALSE;
+	}
 	return msm_fb_blank_sub(blank_mode, info, mfd->op_enable);
 }
 
