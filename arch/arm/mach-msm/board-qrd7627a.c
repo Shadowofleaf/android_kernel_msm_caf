@@ -34,7 +34,10 @@
 #include <linux/regulator/msm-gpio-regulator.h>
 #include <linux/ion.h>
 #include <linux/i2c-gpio.h>
+#include <linux/regulator/fan53555.h>
 #include <linux/regulator/onsemi-ncp6335d.h>
+#include <linux/msm_ion.h>
+#include <linux/dma-mapping.h>
 #include <linux/regulator/fan53555.h>
 #include <linux/dma-contiguous.h>
 #include <linux/dma-mapping.h>
