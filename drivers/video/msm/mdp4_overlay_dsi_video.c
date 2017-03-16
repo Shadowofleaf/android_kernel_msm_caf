@@ -583,7 +583,6 @@ int mdp4_dsi_video_on(struct platform_device *pdev)
 
 	vctrl->mfd = mfd;
 	vctrl->dev = mfd->fbi->dev;
-	vctrl->blt_ctrl = pinfo->lcd.blt_ctrl;
 	vctrl->vsync_irq_enabled = 0;
 	vsync_irq_cnt = 0;
 
