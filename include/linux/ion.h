@@ -61,6 +61,83 @@ enum ion_heap_type {
 					   maintenance when the buffer is
 					   mapped for dma */
 
+enum ion_heap_ids {
+	INVALID_HEAP_ID = -1,
+	ION_CP_MM_HEAP_ID = 8,
+	ION_CP_MFC_HEAP_ID = 12,
+	ION_CP_WB_HEAP_ID = 16, /* 8660 only */
+	ION_CAMERA_HEAP_ID = 20, /* 8660 only */
+	ION_SF_HEAP_ID = 24,
+	ION_IOMMU_HEAP_ID = 25,
+	ION_QSECOM_HEAP_ID = 26,
+	ION_AUDIO_HEAP_BL_ID = 27,
+	ION_AUDIO_HEAP_ID = 28,
+
+	ION_MM_FIRMWARE_HEAP_ID = 29,
+	ION_SYSTEM_HEAP_ID = 30,
+
+	ION_HEAP_ID_RESERVED = 31 /** Bit reserved for ION_SECURE flag */
+};
+
+enum ion_fixed_position {
+	NOT_FIXED,
+	FIXED_LOW,
+	FIXED_MIDDLE,
+	FIXED_HIGH,
+};
+
+enum cp_mem_usage {
+	VIDEO_BITSTREAM = 0x1,
+	VIDEO_PIXEL = 0x2,
+	VIDEO_NONPIXEL = 0x3,
+	MAX_USAGE = 0x4,
+	UNKNOWN = 0x7FFFFFFF,
+};
+
+/**
+ * Flag to use when allocating to indicate that a heap is secure.
+ */
+#define ION_SECURE (1 << ION_HEAP_ID_RESERVED)
+
+/**
+ * Macro should be used with ion_heap_ids defined above.
+ */
+#define ION_HEAP(bit) (1 << (bit))
+
+#define ION_VMALLOC_HEAP_NAME	"vmalloc"
+#define ION_AUDIO_HEAP_NAME	"audio"
+#define ION_AUDIO_BL_HEAP_NAME	"bl_mem_audio"
+#define ION_SF_HEAP_NAME	"sf"
+#define ION_MM_HEAP_NAME	"mm"
+#define ION_CAMERA_HEAP_NAME	"camera_preview"
+#define ION_IOMMU_HEAP_NAME	"iommu"
+#define ION_MFC_HEAP_NAME	"mfc"
+#define ION_WB_HEAP_NAME	"wb"
+#define ION_MM_FIRMWARE_HEAP_NAME	"mm_fw"
+#define ION_QSECOM_HEAP_NAME	"qsecom"
+#define ION_FMEM_HEAP_NAME	"fmem"
+
+#define CACHED          1
+#define UNCACHED        0
+
+#define ION_CACHE_SHIFT 0
+
+#define ION_SET_CACHE(__cache)  ((__cache) << ION_CACHE_SHIFT)
+
+#define ION_IS_CACHED(__flags)	((__flags) & (1 << ION_CACHE_SHIFT))
+
+/*
+ * This flag allows clients when mapping into the IOMMU to specify to
+ * defer un-mapping from the IOMMU until the buffer memory is freed.
+ */
+#define ION_SECURE (1 << ION_HEAP_ID_RESERVED)
+
+/*
+ * This flag allows clients to defer unsecuring a buffer until the buffer
+ * is actually freed.
+ */
+#define ION_UNSECURE_DELAYED	1
+
 #ifdef __KERNEL__
 #include <linux/err.h>
 #include <mach/ion.h>
