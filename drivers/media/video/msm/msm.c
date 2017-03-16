@@ -2784,7 +2784,6 @@ static long msm_ioctl_config(struct file *fp, unsigned int cmd,
 	return rc;
 }
 
-
 static int msm_open_config(struct inode *inode, struct file *fp)
 {
 	int rc;
