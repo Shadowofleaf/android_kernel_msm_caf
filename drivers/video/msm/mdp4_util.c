@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2009-2013, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2009-2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -395,6 +394,9 @@ void mdp4_hw_init(void)
 	mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_ON, FALSE);
 	mdp_clk_ctrl(1);
 
+	mdp_bus_scale_update_request
+		(MDP_BUS_SCALE_INIT, MDP_BUS_SCALE_INIT);
+
 #ifdef MDP4_ERROR
 	/*
 	 * Issue software reset on DMA_P will casue DMA_P dma engine stall
@@ -454,11 +456,6 @@ void mdp4_hw_init(void)
 
 	clk_rate = mdp_get_core_clk();
 	mdp4_fetch_cfg(clk_rate);
-
-	if (mdp_rev >= MDP_REV_42) {
-		/* MDP_LAYERMIXER_IN_CFG_UPDATE_METHOD */
-		outpdw(MDP_BASE + 0x100fc, 0x01);
-	}
 
 	/* Mark hardware as initialized. Only revisions > v2.1 have a register
 	 * for tracking core reset status. */
@@ -562,7 +559,7 @@ irqreturn_t mdp4_isr(int irq, void *ptr)
 			mdp4_dmap_done_dsi_cmd(0);
 #else
 		else { /* MDDI */
-			mdp4_dma_p_done_mddi(dma);
+			mdp4_dmap_done_mddi(0);
 			mdp_pipe_ctrl(MDP_DMA2_BLOCK,
 				MDP_BLOCK_POWER_OFF, TRUE);
 			complete(&dma->comp);
@@ -613,7 +610,7 @@ irqreturn_t mdp4_isr(int irq, void *ptr)
 				mdp4_overlay0_done_dsi_cmd(0);
 #else
 			if (panel & MDP4_PANEL_MDDI)
-				mdp4_overlay0_done_mddi(dma);
+				mdp4_overlay0_done_mddi(0);
 #endif
 		}
 		mdp_hw_cursor_done();
@@ -635,10 +632,12 @@ irqreturn_t mdp4_isr(int irq, void *ptr)
 		if (panel & MDP4_PANEL_ATV)
 			mdp4_overlay1_done_atv();
 #endif
+		mdp_hw_cursor_done();
 	}
 #if defined(CONFIG_FB_MSM_WRITEBACK_MSM_PANEL)
 	if (isr & INTR_OVERLAY2_DONE) {
 		mdp4_stat.intr_overlay2++;
+		mdp_pipe_ctrl(MDP_OVERLAY2_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
 		/* disable DTV interrupt */
 		if (panel & MDP4_PANEL_WRITEBACK)
 			mdp4_overlay2_done_wfd(&dma_wb_data);
@@ -1390,14 +1389,6 @@ struct mdp_csc_cfg mdp_csc_convert[4] = {
 		{ 0x0, 0xff, 0x0, 0xff, 0x0, 0xff, },
 	},
 };
-
-void mdp4_vg_csc_restore(void)
-{
-        int i;
-
-        for (i = 0; i < CSC_MAX_BLOCKS; i++)
-                mdp4_csc_config(&csc_cfg_matrix[i]);
-}
 
 
 void mdp4_vg_csc_update(struct mdp_csc *p)
@@ -2326,7 +2317,7 @@ u32 mdp4_allocate_writeback_buf(struct msm_fb_data_type *mfd, u32 mix_num)
 					pr_err("ion_map_iommu() read failed\n");
 					return -ENOMEM;
 				}
-				if (mfd->mem_hid & ION_SECURE) {
+				if (mfd->mem_hid & ION_FLAG_SECURE) {
 					if (ion_phys(mfd->iclient, buf->ihdl,
 						&addr, (size_t *)&len)) {
 						pr_err("%s:%d: ion_phys map failed\n",
@@ -2389,7 +2380,7 @@ void mdp4_free_writeback_buf(struct msm_fb_data_type *mfd, u32 mix_num)
 	if (!IS_ERR_OR_NULL(mfd->iclient)) {
 		if (!IS_ERR_OR_NULL(buf->ihdl)) {
 			if (mdp_iommu_split_domain) {
-				if (!(mfd->mem_hid & ION_SECURE))
+				if (!(mfd->mem_hid & ION_FLAG_SECURE))
 					ion_unmap_iommu(mfd->iclient, buf->ihdl,
 						DISPLAY_WRITE_DOMAIN, GEN_POOL);
 				ion_unmap_iommu(mfd->iclient, buf->ihdl,
@@ -3027,11 +3018,39 @@ static int mdp4_qseed_access_cfg(struct mdp_qseed_cfg_data *cfg)
 
 	ret = copy_from_user(values, cfg->data, sizeof(uint32_t) * cfg->len);
 
-	base += (cfg->table_num == 1) ? MDP4_QSEED_TABLE1_OFF :
-						MDP4_QSEED_TABLE2_OFF;
-	for (i = 0; i < cfg->len; i++) {
-		MDP_OUTP(base , values[i]);
-		base += sizeof(uint32_t);
+	if (config->ops & MDP_PP_OPS_WRITE) {
+		ret = copy_from_user(values, config->data,
+						sizeof(uint32_t) * config->len);
+		if (ret) {
+			pr_warn("%s: Error copying from user, %d", __func__,
+									ret);
+			ret = -EINVAL;
+			goto err_mem;
+		}
+		mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_ON, FALSE);
+		for (i = 0; i < config->len; i++) {
+			if (!(base & 0x3FF))
+				wmb();
+			MDP_OUTP(base , values[i]);
+			base += sizeof(uint32_t);
+		}
+		mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
+	} else if (config->ops & MDP_PP_OPS_READ) {
+		mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_ON, FALSE);
+		for (i = 0; i < config->len; i++) {
+			values[i] = inpdw(base);
+			if (!(base & 0x3FF))
+				rmb();
+			base += sizeof(uint32_t);
+		}
+		mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
+		ret = copy_to_user(config->data, values,
+						sizeof(uint32_t) * config->len);
+		if (ret) {
+			pr_warn("%s: Error copying to user, %d", __func__, ret);
+			ret = -EINVAL;
+			goto err_mem;
+		}
 	}
 
 err_mem:
@@ -3081,16 +3100,115 @@ error:
 	return ret;
 }
 
+static int is_valid_calib_addr(void *addr)
+{
+	int ret = 0;
+	unsigned int ptr;
+
+	ptr = (unsigned int) addr;
+
+	if (mdp_rev >= MDP_REV_30 && mdp_rev < MDP_REV_40) {
+		/* if request is outside the MDP reg-map or is not aligned 4 */
+		if (ptr == 0x0 || ptr > 0xF0600 || ptr % 0x4)
+			goto end;
+
+		if (ptr >= 0x90000 && ptr < 0x94000) {
+			if (ptr == 0x90000 || ptr == 0x90070)
+				ret = 1;
+			else if (ptr >= 0x93400 && ptr <= 0x93420)
+				ret = 1;
+			else if (ptr >= 0x93500 && ptr <= 0x93508)
+				ret = 1;
+			else if (ptr >= 0x93580 && ptr <= 0x93588)
+				ret = 1;
+			else if (ptr >= 0x93600 && ptr <= 0x93614)
+				ret = 1;
+			else if (ptr >= 0x93680 && ptr <= 0x93694)
+				ret = 1;
+			else if (ptr >= 0x93800 && ptr <= 0x93BFC)
+				ret = 1;
+		}
+	} else if (mdp_rev >= MDP_REV_40 && mdp_rev <= MDP_REV_44) {
+		/* if request is outside the MDP reg-map or is not aligned 4 */
+		if (ptr > 0xF0600 || ptr % 0x4)
+			goto end;
+
+		if (ptr < 0x90000) {
+			if (ptr == 0x0 || ptr == 0x4 || ptr == 0x28200 ||
+								ptr == 0x28204)
+				ret = 1;
+		} else if (ptr < 0x95000) {
+			if (ptr == 0x90000 || ptr == 0x90070)
+				ret = 1;
+			else if (ptr >= 0x93400 && ptr <= 0x93420)
+				ret = 1;
+			else if (ptr >= 0x93500 && ptr <= 0x93508)
+				ret = 1;
+			else if (ptr >= 0x93580 && ptr <= 0x93588)
+				ret = 1;
+			else if (ptr >= 0x93600 && ptr <= 0x93614)
+				ret = 1;
+			else if (ptr >= 0x93680 && ptr <= 0x93694)
+				ret = 1;
+			else if (ptr >= 0x94800 && ptr <= 0x94BFC)
+				ret = 1;
+		} else if (ptr < 0x9A000) {
+			if (ptr >= 0x98800 && ptr <= 0x9883C)
+				ret = 1;
+			else if (ptr >= 0x98880 && ptr <= 0x988AC)
+				ret = 1;
+			else if (ptr >= 0x98900 && ptr <= 0x9893C)
+				ret = 1;
+			else if (ptr >= 0x98980 && ptr <= 0x989BC)
+				ret = 1;
+			else if (ptr >= 0x98A00 && ptr <= 0x98A3C)
+				ret = 1;
+			else if (ptr >= 0x98A80 && ptr <= 0x98ABC)
+				ret = 1;
+			else if (ptr >= 0x99000 && ptr <= 0x993FC)
+				ret = 1;
+			else if (ptr >= 0x99800 && ptr <= 0x99BFC)
+				ret = 1;
+		} else if (ptr >= 0x9A000 && ptr <= 0x9a08c) {
+			ret = 1;
+		}
+	}
+end:
+	return ret;
+}
+
+int mdp4_calib_config(struct mdp_calib_config_data *cfg)
+{
+	int ret = -1;
+	void *ptr = (void *) cfg->addr;
+
+	if (is_valid_calib_addr(ptr))
+		ret = 0;
+	else
+		return ret;
+
+	ptr = (void *)(((unsigned int) ptr) + MDP_BASE);
+	mdp_clk_ctrl(1);
+	if (cfg->ops & MDP_PP_OPS_READ) {
+		cfg->data = inpdw(ptr);
+		ret = 1;
+	} else if (cfg->ops & MDP_PP_OPS_WRITE) {
+		outpdw(ptr, cfg->data);
+	}
+	mdp_clk_ctrl(0);
+	return ret;
+}
+
 u32 mdp4_get_mixer_num(u32 panel_type)
 {
-  u32 mixer_num;
-  if ((panel_type == TV_PANEL) ||
-      (panel_type == DTV_PANEL))
-    mixer_num = MDP4_MIXER1;
-  else if (panel_type == WRITEBACK_PANEL) {
-    mixer_num = MDP4_MIXER2;
-  } else {
-    mixer_num = MDP4_MIXER0;
-  }
-  return mixer_num;
+	u32 mixer_num;
+	if ((panel_type == TV_PANEL) ||
+			(panel_type == DTV_PANEL))
+		mixer_num = MDP4_MIXER1;
+	else if (panel_type == WRITEBACK_PANEL) {
+		mixer_num = MDP4_MIXER2;
+	} else {
+		mixer_num = MDP4_MIXER0;
+	}
+	return mixer_num;
 }

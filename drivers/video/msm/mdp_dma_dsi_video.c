@@ -1,5 +1,4 @@
-/*
- * Copyright (c) 2011-2013, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -108,7 +107,6 @@ int mdp_dsi_video_on(struct platform_device *pdev)
 
 	vsync_cntrl.dev = mfd->fbi->dev;
 	atomic_set(&vsync_cntrl.suspend, 0);
-	vsync_cntrl.vsync_irq_enabled = 0;
 	bpp = fbi->var.bits_per_pixel / 8;
 	buf = (uint8 *) fbi->fix.smem_start;
 
@@ -248,6 +246,16 @@ int mdp_dsi_video_on(struct platform_device *pdev)
 	mdp_histogram_ctrl_all(TRUE);
 	/* MDP cmd block disable */
 	mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
+
+#ifdef CONFIG_FB_MSM_MIPI_HX8369B_WVGA_PT_PANEL || CONFIG_FB_MSM_MIPI_NT35510_CMD_WVGA_PT_PANEL || CONFIG_FB_MSM_MIPI_HX8357_CMD_SMD_HVGA_PT_PANEL
+	ret = panel_next_on(pdev);	
+#endif
+
+		kobject_uevent(&vsync_cntrl.dev->kobj, KOBJ_ADD);
+		pr_debug("%s: kobject_uevent(KOBJ_ADD)\n", __func__);
+		vsync_cntrl.sysfs_created = 1;
+	}
+	mdp_histogram_ctrl_all(TRUE);
 
 	return ret;
 }
