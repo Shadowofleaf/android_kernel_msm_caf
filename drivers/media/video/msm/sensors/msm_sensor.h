@@ -195,6 +195,11 @@ struct msm_sensor_ctrl_t {
 	struct regulator **reg_ptr;
 	struct clk *cam_clk;
 	long clk_rate;
+
+	uint8_t is_HD_preview;
+	uint32_t need_configuration;
+	uint8_t is_initialized;
+	char sensor_name[CAMERA_NAME_LEN];
 	enum msm_sensor_state sensor_state;
 };
 

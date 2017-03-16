@@ -793,6 +793,7 @@ power_down:
 	if (rc > 0)
 		rc = 0;
 	s_ctrl->func_tbl->sensor_power_down(s_ctrl);
+    mdelay(10);
 	s_ctrl->sensor_state = MSM_SENSOR_POWER_DOWN;
 	return rc;
 }
