@@ -2302,7 +2302,7 @@ static long vid_dec_ioctl(struct file *file,
 			ker_vaddr = (unsigned long) ion_map_kernel(
 				client_ctx->user_ion_client,
 				client_ctx->seq_hdr_ion_handle);
-			if (IS_ERR_OR_NULL((void *)ker_vaddr)) {
+			if (!ker_vaddr) {
 				ERR("%s():get_ION_kernel virtual addr fail\n",
 							 __func__);
 				ion_free(client_ctx->user_ion_client,

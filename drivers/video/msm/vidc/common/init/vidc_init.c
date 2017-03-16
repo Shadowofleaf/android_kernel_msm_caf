@@ -727,6 +727,16 @@ u32 vidc_insert_addr_table(struct video_client_ctx *client_ctx,
 				 __func__);
 				goto bail_out_add;
 			}
+			*kernel_vaddr = (unsigned long)
+				ion_map_kernel(
+				client_ctx->user_ion_client,
+				buff_ion_handle);
+			if (IS_ERR_OR_NULL((void *)*kernel_vaddr)) {
+				ERR("%s():ION virtual addr fail\n",
+				 __func__);
+				*kernel_vaddr = (unsigned long)NULL;
+				goto ion_free_error;
+			}
 			if (res_trk_check_for_sec_session() ||
 			   (res_trk_get_core_type() == (u32)VCD_CORE_720P)) {
 				if (ion_phys(client_ctx->user_ion_client,
