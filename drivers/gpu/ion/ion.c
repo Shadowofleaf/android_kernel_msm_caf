@@ -1346,15 +1346,14 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		}
 		break;
 	}
-	case ION_IOC_ALLOC_COMPAT:
-	{
-		struct ion_allocation_data_old data;
+        case ION_IOC_ALLOC_COMPAT:
+        {
+		struct ion_allocation_data_compat data;
 
 		if (copy_from_user(&data, (void __user *)arg, sizeof(data)))
 			return -EFAULT;
 		data.handle = ion_alloc(client, data.len, data.align,
-				data.flags, data.flags);
->>>>>>> abb6419... Sync with TeamHackLG
+						data.flags);
 
 		if (IS_ERR(data.handle))
 			return PTR_ERR(data.handle);
@@ -1401,6 +1400,7 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		break;
 	}
 	case ION_IOC_IMPORT:
+        case ION_IOC_IMPORT_COMPAT:
 	{
 		struct ion_fd_data data;
 		int ret = 0;
@@ -1432,15 +1432,19 @@ static long ion_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		return dev->custom_ioctl(client, data.cmd, data.arg);
 	}
 	case ION_IOC_CLEAN_CACHES:
+        case ION_IOC_CLEAN_CACHES_COMPAT:
 		return client->dev->custom_ioctl(client,
 						ION_IOC_CLEAN_CACHES, arg);
 	case ION_IOC_INV_CACHES:
+        case ION_IOC_INV_CACHES_COMPAT:
 		return client->dev->custom_ioctl(client,
 						ION_IOC_INV_CACHES, arg);
 	case ION_IOC_CLEAN_INV_CACHES:
+        case ION_IOC_CLEAN_INV_CACHES_COMPAT:
 		return client->dev->custom_ioctl(client,
 						ION_IOC_CLEAN_INV_CACHES, arg);
 	case ION_IOC_GET_FLAGS:
+        case ION_IOC_GET_FLAGS_COMPAT:
 		return client->dev->custom_ioctl(client,
 						ION_IOC_GET_FLAGS, arg);
 	default:
