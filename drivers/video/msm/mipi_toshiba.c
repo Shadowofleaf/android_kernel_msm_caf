@@ -319,6 +319,7 @@ static struct msm_fb_panel_data toshiba_panel_data = {
 	.on		= mipi_toshiba_lcd_on,
 	.off		= mipi_toshiba_lcd_off,
 	.late_init	= mipi_toshiba_lcd_late_init,
+	.early_off	= mipi_toshiba_early_off,
 	.set_backlight  = mipi_toshiba_set_backlight,
 };
 
