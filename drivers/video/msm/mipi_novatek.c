@@ -454,6 +454,11 @@ static int mipi_novatek_lcd_late_init(struct platform_device *pdev)
 	return 0;
 }
 
+static int mipi_novatek_lcd_late_init(struct platform_device *pdev)
+{
+	return 0;
+}
+
 DEFINE_LED_TRIGGER(bkl_led_trigger);
 
 static char led_pwm1[2] = {0x51, 0x0};	/* DTYPE_DCS_WRITE1 */

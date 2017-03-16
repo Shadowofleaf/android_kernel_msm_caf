@@ -333,12 +333,6 @@ static int mipi_dsi_on(struct platform_device *pdev)
 	return ret;
 }
 
-static int mipi_dsi_early_off(struct platform_device *pdev)
-{
-	return panel_next_early_off(pdev);
-}
-
-
 static int mipi_dsi_late_init(struct platform_device *pdev)
 {
 	return panel_next_late_init(pdev);
@@ -490,9 +484,7 @@ static int mipi_dsi_probe(struct platform_device *pdev)
 	pdata = mdp_dev->dev.platform_data;
 	pdata->on = mipi_dsi_on;
 	pdata->off = mipi_dsi_off;
-	pdata->fps_level_change = mipi_dsi_fps_level_change;
 	pdata->late_init = mipi_dsi_late_init;
-	pdata->early_off = mipi_dsi_early_off;
 	pdata->next = pdev;
 
 	/*
