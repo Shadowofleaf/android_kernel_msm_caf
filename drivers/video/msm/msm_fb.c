@@ -278,6 +278,39 @@ int msm_fb_detect_client(const char *name)
 	return ret;
 }
 
+#ifdef CONFIG_APPLY_GA_SOLUTION
+/* Mark for GetLog */
+struct struct_frame_buf_mark {
+	u32 special_mark_1;
+	u32 special_mark_2;
+	u32 special_mark_3;
+	u32 special_mark_4;
+	void *p_fb;
+	u32 resX;
+	u32 resY;
+	u32 bpp;    //color depth : 16 or 24
+	u32 frames; // frame buffer count : 2
+};
+
+static struct struct_frame_buf_mark  frame_buf_mark = {
+	.special_mark_1 = (('*' << 24) | ('^' << 16) | ('^' << 8) | ('*' << 0)),
+	.special_mark_2 = (('I' << 24) | ('n' << 16) | ('f' << 8) | ('o' << 0)),
+	.special_mark_3 = (('H' << 24) | ('e' << 16) | ('r' << 8) | ('e' << 0)),
+	.special_mark_4 = (('f' << 24) | ('b' << 16) | ('u' << 8) | ('f' << 0)),
+	.p_fb   = 0,
+#if 	1
+	.resX	= 256,
+	.resY	= 320,
+	.bpp	= 18,
+#else
+	.resX   = 320,
+	.resY   = 480,
+	.bpp    = 24,
+#endif
+	.frames = 2
+};
+#endif
+
 static ssize_t msm_fb_fps_level_change(struct device *dev,
 				struct device_attribute *attr,
 				const char *buf, size_t count)
@@ -288,9 +321,6 @@ static ssize_t msm_fb_fps_level_change(struct device *dev,
 		(struct msm_fb_panel_data *)mfd->pdev->dev.platform_data;
 	unsigned long val;
 	int ret;
-
-	if (mfd->panel.type != MIPI_VIDEO_PANEL)
-		return -EINVAL;
 
 	ret = kstrtoul(buf, 10, &val);
 	if (ret)
@@ -358,7 +388,7 @@ static ssize_t msm_fb_msm_fb_type(struct device *dev,
 }
 
 static DEVICE_ATTR(msm_fb_type, S_IRUGO, msm_fb_msm_fb_type, NULL);
-static DEVICE_ATTR(msm_fb_fps_level, S_IRUGO | S_IWUSR | S_IWGRP, NULL, \
+static DEVICE_ATTR(msm_fb_fps_level, S_IRUGO | S_IWUGO, NULL, \
 				msm_fb_fps_level_change);
 static struct attribute *msm_fb_attrs[] = {
 	&dev_attr_msm_fb_type.attr,
