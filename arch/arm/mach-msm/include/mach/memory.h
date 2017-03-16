@@ -164,4 +164,5 @@ extern char *__compat_exports_end[];
 
 #ifndef CONFIG_ARCH_MSM7X27
 #define CONSISTENT_DMA_SIZE	(SZ_1M * 14)
+
 #endif
