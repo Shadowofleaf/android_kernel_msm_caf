@@ -918,9 +918,7 @@ int mdp_ppp_v4l2_overlay_play(struct fb_info *info,
 	unsigned long srcp0_addr, unsigned long srcp0_size,
 	unsigned long srcp1_addr, unsigned long srcp1_size);
 void mdp_update_pm(struct msm_fb_data_type *mfd, ktime_t pre_vsync);
-
 u32 mdp_get_panel_framerate(struct msm_fb_data_type *mfd);
-
 #ifdef CONFIG_FB_MSM_DTV
 void mdp_vid_quant_set(void);
 #else
@@ -930,24 +928,4 @@ static inline void mdp_vid_quant_set(void)
 }
 #endif
 
-#ifdef CONFIG_UPDATE_LCDC_LUT
-#define R_MASK    0x00ff0000
-#define G_MASK    0x000000ff
-#define B_MASK    0x0000ff00
-#define R_SHIFT   16
-#define G_SHIFT   0
-#define B_SHIFT   8
-#define lut2r(lut) ((lut & R_MASK) >> R_SHIFT)
-#define lut2g(lut) ((lut & G_MASK) >> G_SHIFT)
-#define lut2b(lut) ((lut & B_MASK) >> B_SHIFT)
-
-#ifdef CONFIG_LCD_KCAL
-#define NUM_QLUT  256
-#define MAX_KCAL_V (NUM_QLUT-1)
-#define scaled_by_kcal(rgb, kcal) \
-		(((((unsigned int)(rgb) * (unsigned int)(kcal)) << 16) / \
-		(unsigned int)MAX_KCAL_V) >> 16)
-#endif
-int mdp_preset_lut_update_lcdc(struct fb_cmap *cmap, uint32_t *internal_lut);
-#endif
 #endif /* MDP_H */
