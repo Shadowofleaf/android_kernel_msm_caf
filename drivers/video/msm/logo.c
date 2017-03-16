@@ -109,12 +109,18 @@ int load_565rle_image(char *filename, bool bf_supported)
 
 	max = fb_width(info) * fb_height(info);
 	ptr = data;
-	bits = (unsigned short *)(info->screen_base);
+	if (bf_supported && (info->node == 1 || info->node == 2)) {
+		err = -EPERM;
+		pr_err("%s:%d no info->creen_base on fb%d!\n",
+		       __func__, __LINE__, info->node);
+		goto err_logo_free_data;
+	}
+	/*bits = (unsigned short *)(info->screen_base);
 	while (count > 3) {
 		unsigned n = ptr[0];
 		if (n > max)
 			break;
-		if (info->var.bits_per_pixel >= 24) { /* rgb888 */
+		if (info->var.bits_per_pixel >= 24) {
 			memset16_rgb8888(bits, ptr[1], n << 1);
 			bits += n * 2;
 		} else {
@@ -123,7 +129,19 @@ int load_565rle_image(char *filename, bool bf_supported)
 		}
 		max -= n;
 		ptr += 2;
-		count -= 4;
+		count -= 4;*/
+	if (info->screen_base) {
+		bits = (unsigned short *)(info->screen_base);
+		while (count > 3) {
+			unsigned n = ptr[0];
+			if (n > max)
+				break;
+			memset16(bits, ptr[1], n << 1);
+			bits += n;
+			max -= n;
+			ptr += 2;
+			count -= 4;
+		}
 	}
 
 	flush_cache_all();

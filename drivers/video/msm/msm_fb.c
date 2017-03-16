@@ -1648,10 +1648,14 @@ static int msm_fb_register(struct msm_fb_data_type *mfd)
 		pr_err("error: not enough memory!\n");
 		return -ENOMEM;
 	}
-	fbram_offset = PAGE_ALIGN((int)fbram)-(int)fbram;
-	fbram += fbram_offset;
-	fbram_phys += fbram_offset;
-	fbram_size -= fbram_offset;
+
+	if (fbram) {
+		fbram_offset = PAGE_ALIGN((int)fbram)-(int)fbram;
+		fbram += fbram_offset;
+		fbram_phys += fbram_offset;
+		fbram_size -= fbram_offset;
+	} else
+		fbram_offset = 0;
 
 	if ((!bf_supported || mfd->index == 0) && fbram)
 		if (fbram_size < fix->smem_len) {
@@ -1661,7 +1665,7 @@ static int msm_fb_register(struct msm_fb_data_type *mfd)
 
 	fbi->screen_base = fbram;
 	fbi->fix.smem_start = (unsigned long)fbram_phys;
-
+    
 	if (fbi->fix.smem_start) {
 		msm_iommu_map_contig_buffer(fbi->fix.smem_start,
 					    DISPLAY_WRITE_DOMAIN,
@@ -1671,24 +1675,23 @@ static int msm_fb_register(struct msm_fb_data_type *mfd)
 					    0,
 					    &(mfd->display_iova));
 
-		msm_iommu_map_contig_buffer(fbi->fix.smem_start,
-					    DISPLAY_READ_DOMAIN,
-					    GEN_POOL,
-					    fbi->fix.smem_len,
-					    SZ_4K,
-					    0,
-					    &(mfd->display_iova));
+	msm_iommu_map_contig_buffer(fbi->fix.smem_start,
+					DISPLAY_READ_DOMAIN,
+					GEN_POOL,
+					fbi->fix.smem_len,
+					SZ_4K,
+					0,
+					&(mfd->display_iova));
 
-		msm_iommu_map_contig_buffer(fbi->fix.smem_start,
-					    ROTATOR_SRC_DOMAIN,
-					    GEN_POOL,
-					    fbi->fix.smem_len,
-					    SZ_4K,
-					    0,
-					    &(mfd->rotator_iova));
-	}
+	msm_iommu_map_contig_buffer(fbi->fix.smem_start,
+					ROTATOR_SRC_DOMAIN,
+					GEN_POOL,
+					fbi->fix.smem_len,
+					SZ_4K,
+					0,
+					&(mfd->rotator_iova));
 
-	if ((!bf_supported || mfd->index == 0) && fbi->screen_base)
+	if (!bf_supported || mfd->index == 0)
 		memset(fbi->screen_base, 0x0, fix->smem_len);
 
 	mfd->op_enable = TRUE;
