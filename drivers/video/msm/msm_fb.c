@@ -891,7 +891,7 @@ static int msm_fb_ext_resume(struct device *dev)
 
 	if ((!mfd) || (mfd->key != MFD_KEY))
 		return 0;
-
+	msm_fb_pan_idle(mfd);
 	pdata = (struct msm_fb_panel_data *)mfd->pdev->dev.platform_data;
 	if (mfd->panel_info.type == HDMI_PANEL ||
 		mfd->panel_info.type == DTV_PANEL) {
@@ -941,7 +941,30 @@ static void msmfb_early_suspend(struct early_suspend *h)
 						early_suspend);
 	struct msm_fb_panel_data *pdata = NULL;
 
-	msm_fb_pan_idle(mfd);
+#ifdef CONFIG_FB_MSM_MIPI_DSI_WHITESCREEN
+	while(waitcount){
+		if (!mfd->bl_level){
+			sleepflag = 1;
+			break;
+		}
+		msleep(10);
+		waitcount--;
+	}
+	if(sleepflag){
+		msm_fb_suspend_sub(mfd);
+		wakeupflag = TRUE;
+	}
+	else {
+		wakeupflag = FALSE;
+	}
+#else
+
+        msm_fb_pan_idle(mfd);
+
+	msm_fb_suspend_sub(mfd);
+#endif
+
+#if defined(CONFIG_FB_MSM_MIPI_HX8369B_WVGA_PT_PANEL)
 #if defined(CONFIG_FB_MSM_MDP303)
 	/*
 	* For MDP with overlay, set framebuffer with black pixels
@@ -1064,9 +1087,8 @@ void msm_fb_set_backlight(struct msm_fb_data_type *mfd, __u32 bkl_lvl)
 	unset_bl_level = bkl_lvl;
 #endif
 
-	if (!mfd->panel_power_on || !bl_updated)
-		return;
-
+	msm_fb_scale_bl(&temp);
+	msm_fb_pan_idle(mfd);
 	pdata = (struct msm_fb_panel_data *)mfd->pdev->dev.platform_data;
 
 	if ((pdata) && (pdata->set_backlight)) {
@@ -1097,8 +1119,6 @@ static int msm_fb_blank_sub(int blank_mode, struct fb_info *info,
 
 	if (!op_enable)
 		return -EPERM;
-
-	msm_fb_pan_idle(mfd);
 
 	pdata = (struct msm_fb_panel_data *)mfd->pdev->dev.platform_data;
 	if ((!pdata) || (!pdata->on) || (!pdata->off)) {
