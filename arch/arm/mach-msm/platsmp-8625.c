@@ -159,7 +159,7 @@ static int  __cpuinit msm8625_release_secondary(unsigned int cpu)
 		return -ENODEV;
 	}
 
-	base_ptr = ioremap_nocache(MSM_CORE1_RESET, SZ_4);
+	base_ptr = ioremap_nocache(CORE_RESET_BASE, SZ_4);
 	if (!base_ptr)
 		return -ENODEV;
 
@@ -315,10 +315,10 @@ void __init platform_smp_prepare_cpus(unsigned int max_cpus)
 	 * Write the address of secondary startup into the
 	 * boot remapper register. The secondary CPU branches to this address.
 	 */
-	__raw_writel(MSM8625_SECONDARY_PHYS, (MSM_CFG_CTL_BASE + 0x34));
-	mb();
+	__raw_writel(MSM8625_CPU_PHYS, (MSM_CFG_CTL_BASE + 0x34));
+ 	mb();
 
-	second_ptr = ioremap_nocache(MSM8625_SECONDARY_PHYS, SZ_8);
+        second_ptr = ioremap_nocache(MSM8625_CPU_PHYS, SZ_8);
 	if (!second_ptr) {
 		pr_err("failed to ioremap for secondary core\n");
 		return;

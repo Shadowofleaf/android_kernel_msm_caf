@@ -122,21 +122,12 @@ void find_membank0_hole(void);
 #endif
 
 /*
-<<<<<<< HEAD
  *  * Need a temporary unique variable that no one will ever see to
  *   * hold the compat string. Line number gives this easily.
  *    * Need another layer of indirection to get __LINE__ to expand
  *     * properly as opposed to appending and ending up with
  *      * __compat___LINE__
  *       */
-=======
- * Need a temporary unique variable that no one will ever see to
- * hold the compat string. Line number gives this easily.
- * Need another layer of indirection to get __LINE__ to expand
- * properly as opposed to appending and ending up with
- * __compat___LINE__
- */
->>>>>>> abb6419... Sync with TeamHackLG
 #define __CONCAT(a, b)	___CONCAT(a, b)
 #define ___CONCAT(a, b)	a ## b
 
