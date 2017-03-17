@@ -3811,9 +3811,20 @@ static void __init reserve_ion_memory(void)
 static void __init msm7x27a_calculate_reserve_sizes(void)
 {
 	fix_sizes();
-	size_ion_devices();
+	size_pmem_devices();
+	reserve_pmem_memory();
+        size_ion_devices();
 	reserve_ion_memory();
 }
+
+static void __init msm8625_reserve(void)
+ {
+ 	msm7x27a_reserve();
+	memblock_remove(MSM8625_SECONDARY_PHYS, SZ_8);
+ 	memblock_remove(MSM8625_WARM_BOOT_PHYS, SZ_32);
+ 	memblock_remove(MSM8625_NON_CACHE_MEM, SZ_2K);
+	memblock_remove(MSM8625_CPU_PHYS, SZ_8);
+ }
 
 static int msm7x27a_paddr_to_memtype(unsigned int paddr)
 {
